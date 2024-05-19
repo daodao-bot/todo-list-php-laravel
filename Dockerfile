@@ -17,10 +17,13 @@ WORKDIR /var/www
 COPY composer.json composer.lock /var/www/
 
 # 使用Composer安装依赖
-RUN composer install
+RUN composer install --no-interaction --optimize-autoloader --no-scripts --no-progress
 
 # 复制Laravel应用的其余文件到工作目录
 COPY . /var/www
+
+RUN composer run-script post-root-package-install
+RUN composer run-script post-create-project-cmd
 
 # 设置Web服务器用户（如果需要）
 # 注意：确保与nginx.conf中的用户匹配
