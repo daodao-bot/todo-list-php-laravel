@@ -17,12 +17,10 @@ WORKDIR /var/www
 COPY composer.json composer.lock /var/www/
 
 # 使用Composer安装依赖
-RUN composer install --no-interaction --optimize-autoloader --no-scripts --no-progress
+RUN composer install
 
 # 复制Laravel应用的其余文件到工作目录
 COPY . /var/www
-COPY .env.example .env
-RUN php artisan key:generate
 
 # 设置Web服务器用户（如果需要）
 # 注意：确保与nginx.conf中的用户匹配
