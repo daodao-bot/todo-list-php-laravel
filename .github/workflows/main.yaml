@@ -41,11 +41,14 @@ jobs:
       - name: Execute tests
         run: vendor/bin/phpunit
 
+      - name: Build Docker Image
+        run: docker build -t $APPLICATION:latest .
+
       - name: Login Docker Hub
         run: docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
 
       - name: Tag the Docker image
-        run: docker tag $APPLICATION:0.0.1 $DOCKER_HUB_NAMESPACE/$APPLICATION:latest
+        run: docker tag $APPLICATION:latest $DOCKER_HUB_NAMESPACE/$APPLICATION:latest
 
       - name: Push the Docker Image
         run: docker push $DOCKER_HUB_NAMESPACE/$APPLICATION:latest
