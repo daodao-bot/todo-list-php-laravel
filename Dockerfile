@@ -1,35 +1,40 @@
-# 使用 php:8.3-apache 作为基础镜像
-FROM php:8.3-apache
+# 使用PHP官方镜像作为基础镜像
+FROM php:8.0-fpm
 
-# 安装 pdo_mysql 扩展
-RUN docker-php-ext-install pdo_mysql
+# 更新包索引并安装依赖
+RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
-# 安装 composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# 安装Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# 设置环境变量，确保Composer使用PHP的fpm版本
+ENV PATH="${PATH}:/usr/local/bin"
 
 # 设置工作目录
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# 复制 composer.lock 和 composer.json 到工作目录
-COPY composer.lock composer.json /var/www/html/
+# 复制composer.json和composer.lock文件到工作目录
+COPY composer.json composer.lock /var/www/
 
-# 安装依赖
-RUN composer install --prefer-dist --no-scripts --no-dev --no-autoloader && rm -rf /root/.composer
+# 使用Composer安装依赖
+RUN composer install --no-interaction --optimize-autoloader --no-scripts --no-progress
 
-# 复制项目文件到工作目录
-COPY . /var/www/html/
+# 复制Laravel应用的其余文件到工作目录
+COPY . /var/www
 
-# 生成 autoload 文件
-RUN composer dump-autoload --no-scripts --no-dev --optimize
+# 设置Web服务器用户（如果需要）
+# 注意：确保与nginx.conf中的用户匹配
+# ARG WEB_SERVER_USER=www-data
+# ARG WEB_SERVER_GROUP=www-data
+#
+# ENV WEB_SERVER_USER $WEB_SERVER_USER
+# ENV WEB_SERVER_GROUP $WEB_SERVER_GROUP
 
-# 更改所有文件的所有权
-RUN chown -R www-data:www-data /var/www/html
+# 设置权限
+RUN chown -R ${WEB_SERVER_USER}:${WEB_SERVER_GROUP} /var/www/storage /var/www/bootstrap/cache
 
-# 启用 apache 的 mod_rewrite 模块
-RUN a2enmod rewrite
-
-# 将 .htaccess 文件复制到 Apache 的文档根目录
-COPY public/.htaccess /var/www/html/public/.htaccess
+# 设置入口点
+ENTRYPOINT ["php", "/var/www/artisan", "serve", "--host", "0.0.0.0", "--port", "80"]
 
 # 暴露端口
 EXPOSE 80
