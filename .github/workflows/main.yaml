@@ -1,0 +1,51 @@
+name: Action
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      TZ: Asia/Shanghai
+      DOCKER_HUB_NAMESPACE: daodaobot
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      APPLICATION: todo-list-php-laravel
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Execute tests
+        run: vendor/bin/phpunit
+
+      - name: Login Docker Hub
+        run: docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+
+      - name: Tag the Docker image
+        run: docker tag $APPLICATION:0.0.1 $DOCKER_HUB_NAMESPACE/$APPLICATION:latest
+
+      - name: Push the Docker Image
+        run: docker push $DOCKER_HUB_NAMESPACE/$APPLICATION:latest

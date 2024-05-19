@@ -1,3 +1,4 @@
+### Laravel template
 /vendor/
 node_modules/
 npm-debug.log
@@ -22,4 +23,3 @@ Homestead.json
 /.vagrant
 .phpunit.result.cache
 
-/.idea
