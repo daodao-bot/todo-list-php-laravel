@@ -1,5 +1,5 @@
 # 使用PHP官方镜像作为基础镜像
-FROM php:8.0-fpm
+FROM php:8.3-fpm
 
 # 更新包索引并安装依赖
 RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
